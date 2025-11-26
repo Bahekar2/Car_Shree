@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Car Routing - Shree Bahekar</title>
+  <style>
+    :root{ --accent:#2d6cdf; --dark:#0f1724; --muted:#6b7280; --glass: rgba(255,255,255,0.06);} 
+    *{box-sizing:border-box}
+    body{font-family:Inter, system-ui, Arial, sans-serif; margin:0; background:linear-gradient(180deg,#f7fbff,#eef4ff); color:var(--dark)}
+
+    /* NAVBAR */
+    .nav-wrap{position:fixed; inset:16px 20px auto 20px; left:50%; transform:translateX(-50%); width:92%; max-width:1100px; z-index:60}
+    .navbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-radius:14px;background:rgba(255,255,255,0.9);box-shadow:0 8px 24px rgba(16,24,40,0.08);backdrop-filter:blur(6px)}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand img{width:44px;height:44px;border-radius:10px;object-fit:cover}
+    .brand h3{margin:0;font-size:18px;color:var(--accent)}
+
+    .nav-links{display:flex;gap:14px;align-items:center}
+    .nav-links a{padding:8px 12px;border-radius:8px;text-decoration:none;color:var(--dark);font-weight:600}
+    .nav-links a:hover{background:linear-gradient(90deg, rgba(45,108,223,0.08), rgba(45,108,223,0.03)); color:var(--accent)}
+    .btn-primary{background:var(--accent);color:white;padding:9px 14px;border-radius:10px;text-decoration:none;font-weight:700}
+
+    /* Hamburger */
+    .hamburger{display:none;border:0;background:none;font-size:22px}
+
+    /* HERO */
+    .hero{max-width:1100px;margin:120px auto 60px;padding:28px;display:grid;grid-template-columns:1fr 420px;gap:28px;align-items:center}
+    .hero-card{background:white;border-radius:14px;padding:26px;box-shadow:0 18px 50px rgba(16,24,40,0.06)}
+    .hero h1{margin:0;font-size:28px;color:var(--dark)}
+    .hero p{color:var(--muted);margin-top:10px;line-height:1.5}
+
+    /* routing form */
+    .route-form{margin-top:18px;display:flex;flex-direction:column;gap:12px}
+    .row{display:flex;gap:10px}
+    .input, .select{flex:1;padding:12px;border-radius:10px;border:1px solid #eef2ff;background:#fbfdff}
+    .actions{display:flex;gap:10px;margin-top:6px}
+
+    /* right column - car image */
+    .car-panel{display:flex;flex-direction:column;gap:12px;align-items:center}
+    .car-image{width:100%;border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(16,24,40,0.06)}
+    .car-image img{width:100%;height:280px;object-fit:cover;display:block}
+    .quick-links{display:flex;gap:8px}
+    .chip{padding:8px 10px;border-radius:10px;background:#fbfdff;border:1px solid rgba(45,108,223,0.06);font-weight:600}
+
+    /* Footer */
+    footer{max-width:1100px;margin:30px auto 80px;padding:18px;text-align:center;color:var(--muted)}
+
+    /* responsive */
+    @media (max-width:920px){
+      .hero{grid-template-columns:1fr;gap:18px;margin-top:100px}
+      .nav-links{display:none}
+      .hamburger{display:block}
+      .nav-wrap{left:10px;transform:none;width:calc(100% - 20px)}
+    }
+
+    /* mobile nav dropdown */
+    .mobile-menu{display:none;position:absolute;top:74px;left:12px;right:12px;background:white;border-radius:12px;padding:12px;box-shadow:0 12px 40px rgba(16,24,40,0.08)}
+    .mobile-menu a{display:block;padding:10px;border-radius:8px;text-decoration:none;color:var(--dark);font-weight:600}
+    .mobile-menu a:hover{background:#f1f8ff;color:var(--accent)}
+    .mobile-menu.show{display:block}
+    .car-image {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 22px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+  }
+  .car-image:hover {
+    transform: scale(1.05) rotate(-1.5deg);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+  }
+</style>
+</head>
+<body>
+
+  <div class="nav-wrap">
+    <nav class="navbar" role="navigation" aria-label="Main">
+      <div class="brand">
+        <img src="data:image/png;base64,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" alt="Car" class="car-image">
+        <div>
+          <h3>Shree Cars</h3>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Car routing & booking</div>
+        </div>
+      </div>
+
+      <div class="nav-links" role="menubar">
+        <a href="#home">Home</a>
+        <a href="#routing">Routing</a>
+        <a href="#fleet">Fleet</a>
+        <a href="#book">Book</a>
+        <a href="#contact">Contact</a>
+        <a class="btn-primary" href="#book">Get Quote</a>
+      </div>
+
+      <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">☰</button>
+    </nav>
+
+    <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
+      <a href="#home">Home</a>
+      <a href="#routing">Routing</a>
+      <a href="#fleet">Fleet</a>
+      <a href="#book">Book</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+
+  <main>
+    <section id="home" class="hero">
+      <div class="hero-card">
+        <h1>Smart Car Routing & Booking</h1>
+        <p>Responsive HTML/CSS template with a modern navbar and routing form. Replace the image and tweak styles as needed. This demo shows how to present a car routing UI and clear navigation for users.</p>
+
+        <div id="routing" class="route-form" aria-label="Routing form">
+          <div class="row">
+            <input class="input" type="text" placeholder="Pickup location (eg. Pune)" id="from">
+            <input class="input" type="text" placeholder="Destination (eg. Mumbai)" id="to">
+          </div>
+          <div class="row">
+            <input class="input" type="date" id="date">
+            <select class="select" id="carType">
+              <option>Economy</option>
+              <option>Comfort</option>
+              <option>Premium</option>
+            </select>
+          </div>
+          <div class="actions">
+            <button class="btn-primary" onclick="estimateRoute()">Estimate Route</button>
+            <button class="chip" onclick="resetForm()">Reset</button>
+          </div>
+
+          <div id="estimate" style="margin-top:14px;color:var(--muted);"></div>
+        </div>
+
+      </div>
+
+      <aside class="car-panel">
+        <div class="car-image">
+          <img src="https://static-cdn.cars24.com/prod/auto-news24-cms/CARS24-Blog-Images/2025/05/12/6b187be0-9266-439c-8bf8-749836fbe8dd-Featured.webp" alt="Car image">
+        </div>
+        <div class="quick-links">
+          <div class="chip">24/7 Support</div>
+          <div class="chip">Live Tracking</div>
+          <div class="chip">Insurance</div>
+        </div>
+        <div style="font-size:14px;color:var(--muted);margin-top:8px">Fleet highlight: Sedan, SUV, Premium Cars</div>
+      </aside>
+    </section>
+
+    <section id="fleet" style="max-width:1100px;margin:18px auto;padding:20px;">
+      <h2 style="margin:0 0 12px 0;color:var(--accent)">Fleet</h2>
+      <p style="color:var(--muted)">Showcase of vehicles (use cards or slider). For demo we show three sample cards.</p>
+      <div style="display:flex;gap:14px;margin-top:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:220px;background:white;padding:12px;border-radius:12px;box-shadow:0 12px 36px rgba(16,24,40,0.04)">
+          <img src="https://5.imimg.com/data5/SA/NK/MY-13940704/x1-bmw-cars.jpg" alt="car" style="width:100%;height:140px;object-fit:cover;border-radius:8px">
+          <h4 style="margin:10px 0 6px 0">Sedan</h4>
+          <div style="color:var(--muted)">Comfortable for city & highway.</div>
+        </div>
+
+        <div style="flex:1;min-width:220px;background:white;padding:12px;border-radius:12px;box-shadow:0 12px 36px rgba(16,24,40,0.04)">
+          <img src="https://www.autobest.co.in/uploads/blog/407718653022.jpeg" alt="car" style="width:100%;height:140px;object-fit:cover;border-radius:8px">
+          <h4 style="margin:10px 0 6px 0">SUV</h4>
+          <div style="color:var(--muted)">Spacious and safe for family trips.</div>
+        </div>
+
+        <div style="flex:1;min-width:220px;background:white;padding:12px;border-radius:12px;box-shadow:0 12px 36px rgba(16,24,40,0.04)">
+          <img src="https://www.infinity-group.in/wp-content/uploads/2024/08/New-BMW-M4-Competition-Coupe-.webp" alt="car" style="width:100%;height:140px;object-fit:cover;border-radius:8px">
+          <h4 style="margin:10px 0 6px 0">Premium</h4>
+          <div style="color:var(--muted)">High-end vehicles for special occasions.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="book" style="max-width:1100px;margin:18px auto;padding:20px;">
+      <h2 style="color:var(--accent)">Book</h2>
+      <p style="color:var(--muted)">Simple booking summary appears after estimation.</p>
+    </section>
+
+    <section id="contact" style="max-width:1100px;margin:18px auto;padding:20px;">
+      <h2 style="color:var(--accent)">Contact</h2>
+      <p style="color:var(--muted)">Email: shreebahekar7336@gmail.com • Phone: 7030070247 • Location: Pune</p>
+    </section>
+
+  </main>
+
+  <footer>
+    © Shree Cars • Built with HTML & CSS by Shree Bahekar
+  </footer>
+
+  <script>
+    function toggleMenu(){
+      const m = document.getElementById('mobileMenu');
+      m.classList.toggle('show');
+      m.setAttribute('aria-hidden', !m.classList.contains('show'));
+    }
+
+    function estimateRoute(){
+      const from = document.getElementById('from').value || 'Pickup';
+      const to = document.getElementById('to').value || 'Destination';
+      const date = document.getElementById('date').value || 'any date';
+      const car = document.getElementById('carType').value;
+      const est = document.getElementById('estimate');
+      // Simple mock estimation
+      const dist = Math.floor(Math.random()*300)+30;
+      const pricePerKm = car === 'Premium' ? 25 : car === 'Comfort' ? 18 : 12;
+      const price = dist * pricePerKm;
+      est.innerHTML = `<strong>Estimate:</strong> ${from} → ${to} on ${date} • ${dist} km • Approx ₹${price}`;
+    }
+
+    function resetForm(){
+      document.getElementById('from').value='';
+      document.getElementById('to').value='';
+      document.getElementById('date').value='';
+      document.getElementById('carType').selectedIndex = 0;
+      document.getElementById('estimate').innerHTML = '';
+    }
+  </script>
+</body>
+</html>
